@@ -19,7 +19,7 @@ func main() {
 		Env: map[string]string{"CF_ROOT": "/root", "SERVER_PORT": "8080"},
 		Routes: []Route{
 			{
-				Route:    "foo.default.cluster.io:8008/welcome",
+				Route:    "foo.default.cluster.io/",
 				Protocol: HTTP2RouteProtocol},
 		},
 		Services: []Service{

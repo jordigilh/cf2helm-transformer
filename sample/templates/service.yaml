@@ -1,14 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.name }}
-  labels:
-  {{-  .Values.labels | nindent 4 }}
+{{- include "metadata" . }}
 spec:
   selector:
     app.kubernetes.io/name: {{ .Values.name }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ dig "SERVER_PORT" .Values.env }}
+    - targetPort: {{ dig "SERVER_PORT" "" .Values.env }}
       protocol: TCP
-      name: http
+      name: web

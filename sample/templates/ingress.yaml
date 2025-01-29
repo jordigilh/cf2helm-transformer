@@ -2,23 +2,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Values.name }}
-  labels:
-  {{-  .Values.labels | nindent 4 }}
-  annotations:
-  {{-  .Values.annotations | nindent 4 }}
+{{- include "metadata" . |nindent 2}}
 spec:
   rules:
+    {{- $name:= .Values.name -}}
     {{- range .Values.route }}
-    {{ $url:= urlParse (printf "%http://%s" .route)}}
-    - host: {{ $url.host | quote }}
+      {{- $url:= urlParse (printf "http://%s" .route) }}
+    - host: {{ $url.hostname }}
       http:
         paths:
           - path: {{ $url.path }}
             backend:
               service:
-                name: {{ .Values.name }}
+                name: {{ $name }}
                 port:
-                  number: {{ dig "SERVER_PORT" .Values.env }}
+                  number: {{ dig "SERVER_PORT" "" $.Values.env }}
     {{- end }}
-{{- end }}
+{{- end -}}

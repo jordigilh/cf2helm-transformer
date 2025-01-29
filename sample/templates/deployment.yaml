@@ -1,55 +1,56 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}
-  {{- if .Values.space }}
-  namespace: {{ .Values.space }}
-  {{- end }}
-  labels:
-    {{-  .Values.labels | nindent 4 }}
-  annotations:
-    {{-  .Values.annotations | nindent 4 }}
-    {{- if .Values.stack }}
-    "stack": {{ .Values.stack | quote }}
-    {{- end }}
+{{- include "metadata" . |nindent 2}}
 spec:
   {{- if .Values.instances }}
   replicas: {{ .Values.instances }}
   {{- end }}
   template:
     metadata:
-    labels:
-      {{-  .Values.labels | nindent 8 }}
-    annotations:
-      {{-  .Values.annotations | nindent 8 }}
+{{- include "metadata" . | nindent 6}}
     spec:
       containers:
     {{- range .Values.process }}
         - name: {{ .type }}
-          command: [{{ .command | toStrings}}]
+          command:
+          {{- range .command }}
+            - {{ . | toYaml }}
+          {{- end }}
           env:
-          {{- range .Values.service}}
-            {{- range $kp,$kv:= range .parameters}}
-             {{- printf "SERVICE__%s__%s" .name $kv| upper" | nident 12 }}: {{ $kv}}
+          {{- range $k,$v:=$.Values.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+          {{- end }}
+          {{- range $.Values.service}}
+            {{- range $kp,$kv:= .parameters}}
+            - name: {{ printf "SERVICE__%s__%s" $.Values.name $kp | upper}}
+              value: {{ $kv | quote}}
             {{- end }}
           {{- end }}
-          image: "{{ .Values.docker.image }}"
+          image: {{ $.Values.docker.image }}
           ports:
-            - name: {{ .name}}
-              containerPort: {{ dig "SERVER_PORT" .Values.env }}
+            - name: {{ .type }}
+              containerPort: {{ dig "SERVER_PORT" "" $.Values.env }}
           livenessProbe:
-            {{ $url:= urlParse (printf "%http://%s" .healthCheck.endpoint)}}
+            {{- $url:= urlParse (printf "http://%s" .healthCheck.endpoint) }}
+            {{- $port:= (regexSplit ":" $url.host -1 | last)}}
             httpGet:
-              path: {{- $url.path }}
-              port: {{- $url.port }}
+              path: {{ $url.path |quote }}
+              {{- if $port }}
+              port: {{ $port }}
+              {{- end }}
           readinessProbe:
-            {{ $url:= urlParse (printf "%http://%s" .readinessCheck.endpoint)}}
+            {{- $url:= urlParse (printf "http://%s" .readinessCheck.endpoint) }}
+            {{- $port:= (regexSplit ":" $url.host -1 | last)}}
             httpGet:
-              path: {{- $url.path }}
-              port: {{- $url.port }}
+              path: {{ $url.path |quote }}
+              {{- if $port }}
+              port: {{ $port }}
+              {{- end -}}
           {{- if .memory }}
           resources:
             requests:
-              memory: {{- .memory }}
+              memory: {{ .memory }}
           {{- end }}
     {{- end }}
