@@ -25,7 +25,7 @@ process:
   - -m
   - http.server
   - $SERVER_PORT
-  memory: 128MB
+  memory: 128Mi
   healthCheck:
     endpoint: localhost:8080/
     type: http
@@ -35,3 +35,4 @@ process:
 stack: default
 docker:
   image: python:latest
+instances: 1

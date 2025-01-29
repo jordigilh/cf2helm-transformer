@@ -8,6 +8,10 @@ import (
 )
 
 func main() {
+	var one = func() *uint {
+		var one uint = 1
+		return &one
+	}()
 
 	a := Application{
 		Metadata: Metadata{
@@ -28,7 +32,7 @@ func main() {
 		Processes: []Process{
 			{Type: Web,
 				Command: []string{"/bin/sh", "echo", "hello world >index.html", "&&", "python3", "-m", "http.server", "$SERVER_PORT"},
-				Memory:  "128MB",
+				Memory:  "128Mi",
 				ReadinessCheck: &Probe{
 					Endpoint: "localhost:8080/",
 					Type:     string(HTTPProbeType),
@@ -43,6 +47,7 @@ func main() {
 		Docker: &Docker{
 			Image: "python:latest",
 		},
+		Instances: one,
 	}
 	b, err := yaml.Marshal(a)
 	if err != nil {

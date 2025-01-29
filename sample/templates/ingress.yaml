@@ -5,16 +5,16 @@ metadata:
 {{- include "metadata" . |nindent 2}}
 spec:
   rules:
-    {{- $name:= .Values.name -}}
     {{- range .Values.route }}
       {{- $url:= urlParse (printf "http://%s" .route) }}
     - host: {{ $url.hostname }}
       http:
         paths:
           - path: {{ $url.path }}
+            pathType: Exact
             backend:
               service:
-                name: {{ $name }}
+                name: {{ $.Values.name }}
                 port:
                   number: {{ dig "SERVER_PORT" "" $.Values.env }}
     {{- end }}

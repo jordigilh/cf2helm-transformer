@@ -27,6 +27,8 @@ type Application struct {
 	BuildPacks []string `yaml:"buildPacks,omitempty"`
 	// Docker captures the Docker specification in the CF application manifest.
 	Docker *Docker `yaml:"docker,omitempty"`
+	// Instances captures the number of instances to run concurrently for this application
+	Instances *uint `yaml:"instances,omitempty"`
 }
 
 type Docker struct {

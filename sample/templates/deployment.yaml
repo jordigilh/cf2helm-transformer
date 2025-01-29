@@ -3,9 +3,10 @@ kind: Deployment
 metadata:
 {{- include "metadata" . |nindent 2}}
 spec:
-  {{- if .Values.instances }}
-  replicas: {{ .Values.instances }}
-  {{- end }}
+  replicas: {{ .Values.instances | default "1" }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
   template:
     metadata:
 {{- include "metadata" . | nindent 6}}
@@ -52,5 +53,6 @@ spec:
           resources:
             requests:
               memory: {{ .memory }}
+              cpu: 100m
           {{- end }}
     {{- end }}
