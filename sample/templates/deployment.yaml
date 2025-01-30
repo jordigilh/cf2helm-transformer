@@ -15,6 +15,9 @@ spec:
     {{- range .Values.process }}
         - name: {{ .type }}
           command:
+            - /bin/sh
+          args:
+            - -c
           {{- range .command }}
             - {{ . | toYaml }}
           {{- end }}

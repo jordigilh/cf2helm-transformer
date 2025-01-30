@@ -4,7 +4,7 @@ metadata:
 {{- include "metadata" . |nindent 2}}
 spec:
   selector:
-    app.kubernetes.io/name: {{ .Values.name }}
+    app: {{ .Values.name }}
   ports:
     - targetPort: {{ dig "SERVER_PORT" "" .Values.env }}
       protocol: TCP

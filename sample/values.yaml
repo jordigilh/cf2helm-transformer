@@ -17,14 +17,7 @@ service:
 process:
 - type: web
   command:
-  - /bin/sh
-  - echo
-  - hello world >index.html
-  - '&&'
-  - python3
-  - -m
-  - http.server
-  - $SERVER_PORT
+  - /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT
   memory: 128Mi
   healthCheck:
     endpoint: localhost:8080/
@@ -34,5 +27,5 @@ process:
     type: http
 stack: default
 docker:
-  image: python:latest
+  image: python:3
 instances: 1

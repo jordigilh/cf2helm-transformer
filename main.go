@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -31,7 +32,7 @@ func main() {
 		},
 		Processes: []Process{
 			{Type: Web,
-				Command: []string{"/bin/sh", "echo", "hello world >index.html", "&&", "python3", "-m", "http.server", "$SERVER_PORT"},
+				Command: []string{"/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT"},
 				Memory:  "128Mi",
 				ReadinessCheck: &Probe{
 					Endpoint: "localhost:8080/",
@@ -45,12 +46,15 @@ func main() {
 		},
 		Stack: "default",
 		Docker: &Docker{
-			Image: "python:latest",
+			Image: "python:3",
 		},
 		Instances: one,
 	}
 	b, err := yaml.Marshal(a)
 	if err != nil {
+		log.Fatal(err)
+	}
+	if err := os.WriteFile("sample/values.yaml", b, os.ModeAppend); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%s\n", b)
