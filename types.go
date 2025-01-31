@@ -92,9 +92,9 @@ type Process struct {
 	// Memory represents the amount of memory requested by the process.
 	Memory string `yaml:"memory" validate:"required"`
 	// HealthCheck captures the health check information
-	HealthCheck Probe `yaml:"healthCheck" validate="required"`
+	HealthCheck Probe `yaml:"healthCheck"`
 	// ReadinessCheck captures the readiness check information.
-	ReadinessCheck Probe `yaml:"readinessCheck" validate="required"`
+	ReadinessCheck Probe `yaml:"readinessCheck"`
 	// Instances represents the number of instances for this process to run.
 	Instances int `yaml:"instances" validate:"required,min=1"`
 	// LogRateLimit represents the maximum amount of logs to be captured per second. Defaults to `16K`

@@ -5,15 +5,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
-	var one = func() *uint {
-		var one uint = 1
-		return &one
-	}()
-
+	validate := validator.New(validator.WithRequiredStructEnabled())
 	a := Application{
 		Metadata: Metadata{
 			Name:        "foo",
@@ -34,21 +31,32 @@ func main() {
 			{Type: Web,
 				Command: []string{"/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT"},
 				Memory:  "128Mi",
-				ReadinessCheck: &Probe{
+				ReadinessCheck: Probe{
 					Endpoint: "localhost:8080/",
-					Type:     string(HTTPProbeType),
+					Type:     HTTPProbeType,
+					Timeout:  30,
+					Interval: 30,
 				},
-				HealthCheck: &Probe{
+				HealthCheck: Probe{
 					Endpoint: "localhost:8080/",
-					Type:     string(HTTPProbeType),
+					Type:     HTTPProbeType,
+					Timeout:  30,
+					Interval: 30,
 				},
+				Instances:    1,
+				LogRateLimit: "16K",
+				Lifecycle:    "docker",
 			},
 		},
 		Stack: "default",
 		Docker: &Docker{
 			Image: "python:3",
 		},
-		Instances: one,
+		Instances: 1,
+	}
+	err := validate.Struct(a)
+	if err != nil {
+		log.Fatal(err)
 	}
 	b, err := yaml.Marshal(a)
 	if err != nil {
