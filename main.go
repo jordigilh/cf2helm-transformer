@@ -29,7 +29,7 @@ func main() {
 		},
 		Processes: []Process{
 			{Type: Web,
-				Command: []string{"/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT"},
+				Command: "/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT",
 				Memory:  "128Mi",
 				ReadinessCheck: Probe{
 					Endpoint: "localhost:8080/",

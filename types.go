@@ -47,7 +47,7 @@ type Sidecar struct {
 	// accumulate more than one type.
 	ProcessTypes []ProcessType `yaml:"processType" validate:"required,oneof=worker web"`
 	// Command captures the command to run the sidecar
-	Command []string `yaml:"command" validate:"required"`
+	Command string `yaml:"command" validate:"required"`
 	// Memory represents the amount of memory to allocate to the sidecar.
 	// It's an optional field.
 	Memory string `yaml:"memory,omitempty"`
@@ -86,7 +86,7 @@ type Process struct {
 	// Accepted values are `web` or `worker`
 	Type ProcessType `yaml:"type" validate:"required,oneof=web worker"`
 	// Command represents the command used to run the process.
-	Command []string `yaml:"command,omitempty"`
+	Command string `yaml:"command,omitempty"`
 	// DiskQuota represents the amount of persistent disk requested by the process.
 	DiskQuota string `yaml:"disk,omitempty"`
 	// Memory represents the amount of memory requested by the process.
