@@ -49,7 +49,7 @@ func main() {
 			},
 		},
 		Stack: "default",
-		Docker: &Docker{
+		Docker: Docker{
 			Image: "python:3",
 		},
 		Instances: 1,
