@@ -4,6 +4,7 @@ labels:
   foo: bar
 annotations:
   bar: foo
+version: ""
 env:
   CF_ROOT: /root
   SERVER_PORT: "8080"
@@ -21,11 +22,19 @@ process:
   memory: 128Mi
   healthCheck:
     endpoint: localhost:8080/
+    timeout: 30
+    interval: 30
     type: http
   readinessCheck:
     endpoint: localhost:8080/
+    timeout: 30
+    interval: 30
     type: http
+  instances: 1
+  logRateLimit: 16K
+  lifecycle: docker
 stack: default
+timeout: 0
 docker:
   image: python:3
 instances: 1
