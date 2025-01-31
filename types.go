@@ -101,8 +101,17 @@ type Process struct {
 	LogRateLimit string `yaml:"logRateLimit" validate:"required"`
 	// Lifecycle captures the value fo the lifecycle field in the CF application manifest.
 	// Valid values are `buildpack`, `cnb`, and `docker`. Defaults to `buildpack`
-	Lifecycle string `yaml:"lifecycle" validate:"required,oneof=buildpack cnb docker"`
+	Lifecycle LifecycleType `yaml:"lifecycle" validate:"required,oneof=buildpack cnb docker"`
 }
+
+type LifecycleType string
+
+const (
+	BuildPackLifecycleType LifecycleType = "buildpack"
+	CNBLifecycleType       LifecycleType = "cnb"
+	DockerLifecycleType    LifecycleType = "docker"
+)
+
 type ProcessType string
 
 const (
