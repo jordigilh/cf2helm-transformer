@@ -20,15 +20,16 @@ type Application struct {
 	// Timeout specifies the maximum time allowed for an application to
 	// respond to readiness or health checks during startup.
 	// If the application does not respond within this time, the platform will mark
-	// the deployment as failed. The default value is 60 seconds.
+	// the deployment as failed. The default value is 60 seconds and maximum to 180 seconds, but both values can be changed in the Cloud Foundry Controller.
 	// https://github.com/cloudfoundry/docs-dev-guide/blob/96f19d9d67f52ac7418c147d5ddaa79c957eec34/deploy-apps/large-app-deploy.html.md.erb#L35
-	Timeout *uint `yaml:"timeout,omitempty"`
+	// Default is 60 (seconds).
+	Timeout int `yaml:"timeout" validate:"min=0,max=180"`
 	// BuildPacks capture the buildpacks defined in the CF application manifest.
 	BuildPacks []string `yaml:"buildPacks,omitempty"`
 	// Docker captures the Docker specification in the CF application manifest.
 	Docker *Docker `yaml:"docker,omitempty"`
-	// Instances captures the number of instances to run concurrently for this application
-	Instances *uint `yaml:"instances,omitempty"`
+	// Instances captures the number of instances to run concurrently for this application. Default is 1.
+	Instances int `yaml:"instances" validate:"required,min=1"`
 }
 
 type Docker struct {
@@ -75,30 +76,33 @@ type Metadata struct {
 	// Annotations capture the annotations as defined in the `labels` field in the CF application manifest
 	Annotations map[string]string `yaml:"annotations,omitempty"`
 	// Version captures the version of the manifest containing the resulting CF application manifests list retrieved via REST API.
-	// Only version 1 is supported at this moment. See https://docs.cloudfoundry.org/devguide/deploy-apps/manifest-attributes.html#manifest-schema-version
-	Version string `yaml:"version,omitempty"`
+	// Only version 1 is supported at this moment See https://docs.cloudfoundry.org/devguide/deploy-apps/manifest-attributes.html#manifest-schema-version
+	// Defaults to 1
+	Version string `yaml:"version"`
 }
 
 type Process struct {
 	// Type captures the `type` field in the Process specification.
 	// Accepted values are `web` or `worker`
-	Type ProcessType `yaml:"type" validate:"required"`
+	Type ProcessType `yaml:"type" validate:"required,oneof=web worker"`
 	// Command represents the command used to run the process.
 	Command []string `yaml:"command,omitempty"`
 	// DiskQuota represents the amount of persistent disk requested by the process.
 	DiskQuota string `yaml:"disk,omitempty"`
 	// Memory represents the amount of memory requested by the process.
-	Memory string `yaml:"memory,omitempty"`
+	Memory string `yaml:"memory" validate:"required"`
 	// HealthCheck captures the health check information
-	HealthCheck *Probe `yaml:"healthCheck,omitempty"`
+	HealthCheck Probe `yaml:"healthCheck" validate="required"`
 	// ReadinessCheck captures the readiness check information.
-	ReadinessCheck *Probe `yaml:"readinessCheck,omitempty"`
+	ReadinessCheck Probe `yaml:"readinessCheck" validate="required"`
 	// Instances represents the number of instances for this process to run.
-	Instances *uint `yaml:"instances,omitempty" validate:"required"`
-	// LogRateLimit represents the maximum amount of logs to be captured per second.
-	LogRateLimit string `yaml:"logRateLimit,omitempty"`
+	Instances int `yaml:"instances" validate:"required,min=1"`
+	// LogRateLimit represents the maximum amount of logs to be captured per second. Defaults to `16K`
+	LogRateLimit string `yaml:"logRateLimit" validate:"required"`
+	// Lifecycle captures the value fo the lifecycle field in the CF application manifest.
+	// Valid values are `buildpack`, `cnb`, and `docker`. Defaults to `buildpack`
+	Lifecycle string `yaml:"lifecycle" validate:"required,oneof=buildpack cnb docker"`
 }
-
 type ProcessType string
 
 const (
@@ -110,14 +114,14 @@ const (
 
 type Probe struct {
 	// Endpoint represents the URL location where to perform the probe check.
-	Endpoint string `yaml:"endpoint,omitempty"`
+	Endpoint string `yaml:"endpoint" validate:"required"`
 	// Timeout represents the number of seconds in which the probe check can be considered as timedout.
 	// https://docs.cloudfoundry.org/devguide/deploy-apps/manifest-attributes.html#timeout
-	Timeout *uint `yaml:"timeout,omitempty" validate:"required"`
+	Timeout int `yaml:"timeout" validate:"required,min=0"`
 	// Interval represents the number of seconds between probe checks.
-	Interval *uint `yaml:"interval,omitempty" validate:"required"`
-	// Type specifies the type of health check to perform
-	Type string `yaml:"type,omitempty" validate:"oneof=http tcp process"`
+	Interval int `yaml:"interval" validate:"required,min=0"`
+	// Type specifies the type of health check to perform.
+	Type ProbeType `yaml:"type" validate:"required,oneof=http process port"`
 }
 
 type ProbeType string
