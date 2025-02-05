@@ -5,7 +5,7 @@ metadata:
 {{- include "metadata" . |nindent 2}}
 spec:
   rules:
-    {{- range .Values.route }}
+    {{- range .Values.routes }}
       {{- $url:= urlParse (printf "http://%s" .route) }}
     - host: {{ $url.hostname }}
       http:

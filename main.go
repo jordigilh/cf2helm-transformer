@@ -14,30 +14,37 @@ func main() {
 	a := Application{
 		Metadata: Metadata{
 			Name:        "foo",
-			Labels:      map[string]string{"foo": "bar"},
-			Annotations: map[string]string{"bar": "foo"},
+			Labels:      map[string]*string{"foo": ptrTo("bar")},
+			Annotations: map[string]*string{"bar": ptrTo("foo")},
 			Space:       "default",
+			Version:     "1",
 		},
 		Env: map[string]string{"CF_ROOT": "/root", "SERVER_PORT": "8080"},
-		Routes: []Route{
-			{
-				Route:    "foo.default.cluster.io/",
-				Protocol: HTTP2RouteProtocol},
+		Route: RouteSpec{
+			Routes: []Route{
+				{
+					Route:    "foo.default.cluster.io/",
+					Protocol: HTTP2RouteProtocol,
+				},
+			},
 		},
-		Services: []Service{
-			{Name: "mysql", Parameters: map[string]interface{}{"DB_NAME": "default"}},
+		Services: Services{
+			ServiceSpec{
+				Name:       "mysql",
+				Parameters: map[string]interface{}{"DB_NAME": "default"},
+			},
 		},
-		Processes: []Process{
+		Processes: Processes{
 			{Type: Web,
 				Command: "/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT",
 				Memory:  "128Mi",
-				ReadinessCheck: Probe{
+				ReadinessCheck: ProbeSpec{
 					Endpoint: "localhost:8080/",
 					Type:     HTTPProbeType,
 					Timeout:  30,
 					Interval: 30,
 				},
-				HealthCheck: Probe{
+				HealthCheck: ProbeSpec{
 					Endpoint: "localhost:8080/",
 					Type:     HTTPProbeType,
 					Timeout:  30,
@@ -67,4 +74,8 @@ func main() {
 	}
 	fmt.Printf("%s\n", b)
 
+}
+
+func ptrTo[T comparable](s T) *T {
+	return &s
 }

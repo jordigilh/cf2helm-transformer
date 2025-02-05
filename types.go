@@ -1,18 +1,20 @@
 package main
 
+// Application represents an interpretation of a runtime Cloud Foundry application. This structure differs in that
+// the information it contains has been processed to simplify its transformation to a Kubernetes manifest using MTA
 type Application struct {
 	// Metadata captures the name, labels and annotations in the application.
 	Metadata Metadata `yaml:",inline" validate:"required"`
 	// Env captures the `env` field values in the CF application manifest.
 	Env map[string]string `yaml:"env,omitempty"`
 	// Routes represent the routes that are made available by the application.
-	Routes []Route `yaml:"route,omitempty"`
+	Route RouteSpec `yaml:"route,inline,omitempty"`
 	// Services captures the `services` field values in the CF application manifest.
-	Services []Service `yaml:"service,omitempty"`
+	Services Services `yaml:"service,omitempty"`
 	// Processes captures the `processes` field values in the CF application manifest.
-	Processes []Process `yaml:"process,omitempty"`
+	Processes Processes `yaml:"process,omitempty"`
 	// Sidecars captures the `sidecars` field values in the CF application manifest.
-	Sidecars []Sidecar `yaml:"sidecar,omitempty"`
+	Sidecars Sidecars `yaml:"sidecar,omitempty"`
 	// Stack represents the `stack` field in the application manifest.
 	// The value is captured for information purposes because it has no relevance
 	// in Kubernetes.
@@ -32,6 +34,10 @@ type Application struct {
 	Instances int `yaml:"instances" validate:"required,min=1"`
 }
 
+type Services []ServiceSpec
+type Processes []ProcessSpec
+type Sidecars []SidecarSpec
+
 type Docker struct {
 	// Image represents the pullspect where the container image is located.
 	Image string `yaml:"image" validate:"required"`
@@ -39,7 +45,7 @@ type Docker struct {
 	Username string `yaml:"username,omitempty"`
 }
 
-type Sidecar struct {
+type SidecarSpec struct {
 	// Name represents the name of the Sidecar
 	Name string `yaml:"name" validate:"required"`
 	// ProcessTypes captures the different process types defined for the sidecar.
@@ -53,7 +59,7 @@ type Sidecar struct {
 	Memory string `yaml:"memory,omitempty"`
 }
 
-type Service struct {
+type ServiceSpec struct {
 	// Name represents the name of the Cloud Foundry service required by the
 	// application. This field represents the runtime name of the service, captured
 	// from the 3 different cases where the service name can be listed.
@@ -72,16 +78,16 @@ type Metadata struct {
 	// application is discovered directly from the CF manifest. It is equivalent to a Namespace in Kubernetes.
 	Space string `yaml:"space,omitempty"`
 	// Labels capture the labels as defined in the `annotations` field in the CF application manifest
-	Labels map[string]string `yaml:"labels,omitempty"`
+	Labels map[string]*string `yaml:"labels,omitempty"`
 	// Annotations capture the annotations as defined in the `labels` field in the CF application manifest
-	Annotations map[string]string `yaml:"annotations,omitempty"`
+	Annotations map[string]*string `yaml:"annotations,omitempty"`
 	// Version captures the version of the manifest containing the resulting CF application manifests list retrieved via REST API.
 	// Only version 1 is supported at this moment See https://docs.cloudfoundry.org/devguide/deploy-apps/manifest-attributes.html#manifest-schema-version
 	// Defaults to 1
 	Version string `yaml:"version"`
 }
 
-type Process struct {
+type ProcessSpec struct {
 	// Type captures the `type` field in the Process specification.
 	// Accepted values are `web` or `worker`
 	Type ProcessType `yaml:"type" validate:"required,oneof=web worker"`
@@ -92,16 +98,16 @@ type Process struct {
 	// Memory represents the amount of memory requested by the process.
 	Memory string `yaml:"memory" validate:"required"`
 	// HealthCheck captures the health check information
-	HealthCheck Probe `yaml:"healthCheck"`
+	HealthCheck ProbeSpec `yaml:"healthCheck"`
 	// ReadinessCheck captures the readiness check information.
-	ReadinessCheck Probe `yaml:"readinessCheck"`
+	ReadinessCheck ProbeSpec `yaml:"readinessCheck"`
 	// Instances represents the number of instances for this process to run.
 	Instances int `yaml:"instances" validate:"required,min=1"`
 	// LogRateLimit represents the maximum amount of logs to be captured per second. Defaults to `16K`
 	LogRateLimit string `yaml:"logRateLimit" validate:"required"`
 	// Lifecycle captures the value fo the lifecycle field in the CF application manifest.
 	// Valid values are `buildpack`, `cnb`, and `docker`. Defaults to `buildpack`
-	Lifecycle LifecycleType `yaml:"lifecycle" validate:"required,oneof=buildpack cnb docker"`
+	Lifecycle LifecycleType `yaml:"lifecycle,omitempty" validate:"required,oneof=buildpack cnb docker"`
 }
 
 type LifecycleType string
@@ -121,7 +127,7 @@ const (
 	Worker ProcessType = "worker"
 )
 
-type Probe struct {
+type ProbeSpec struct {
 	// Endpoint represents the URL location where to perform the probe check.
 	Endpoint string `yaml:"endpoint" validate:"required"`
 	// Timeout represents the number of seconds in which the probe check can be considered as timedout.
@@ -137,9 +143,17 @@ type ProbeType string
 
 const (
 	HTTPProbeType    ProbeType = "http"
-	TCPProbeType     ProbeType = "tcp"
 	ProcessProbeType ProbeType = "process"
+	PortProbeType    ProbeType = "port"
 )
+
+type Routes []Route
+
+type RouteSpec struct {
+	NoRoute     bool   `yaml:"noRoute,omitempty"`
+	RandomRoute bool   `yaml:"randomRoute,omitempty"`
+	Routes      Routes `yaml:"routes,omitempty"`
+}
 
 type Route struct {
 	// Route captures the domain name, port and path of the route.
@@ -147,8 +161,14 @@ type Route struct {
 	// Protocol captures the protocol type: http, http2 or tcp. Note that the CF `protocol` field is only available
 	// for CF deployments that use HTTP/2 routing.
 	Protocol RouteProtocol `yaml:"protocol" validate:"required,oneof=http http2 tcp"`
+	// Options captures the options for the Route. Only load balancing is supported at the moment.
+	Options RouteOptions `yaml:"options,omitempty"`
 }
 
+type RouteOptions struct {
+	// LoadBalancing captures the settings for load balancing. Only `round-robin` or `least-connections` are supported
+	LoadBalancing string `yaml:"loadBalancing,omitempty" validate:"oneof=round-robin least-connections"`
+}
 type RouteProtocol string
 
 const (

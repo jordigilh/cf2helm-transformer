@@ -4,11 +4,11 @@ labels:
   foo: bar
 annotations:
   bar: foo
-version: ""
+version: "1"
 env:
   CF_ROOT: /root
   SERVER_PORT: "8080"
-route:
+routes:
 - route: foo.default.cluster.io/
   protocol: http2
 service:
@@ -17,8 +17,8 @@ service:
     DB_NAME: default
 process:
 - type: web
-  command:
-  - /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT
+  command: /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server
+    $SERVER_PORT
   memory: 128Mi
   healthCheck:
     endpoint: localhost:8080/
