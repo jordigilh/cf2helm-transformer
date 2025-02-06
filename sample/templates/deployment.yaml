@@ -12,7 +12,7 @@ spec:
 {{- include "metadata" . | nindent 6}}
     spec:
       containers:
-    {{- range .Values.process }}
+    {{- range .Values.processes }}
         - name: {{ .type }}
           command:
             - /bin/sh
@@ -24,7 +24,7 @@ spec:
             - name: {{ $k }}
               value: {{ $v | quote }}
           {{- end }}
-          {{- range $.Values.service}}
+          {{- range $.Values.services}}
             {{- range $kp,$kv:= .parameters}}
             - name: {{ printf "SERVICE__%s__%s" $.Values.name $kp | upper}}
               value: {{ $kv | quote}}

@@ -1,4 +1,4 @@
-package main
+package models
 
 // Application represents an interpretation of a runtime Cloud Foundry application. This structure differs in that
 // the information it contains has been processed to simplify its transformation to a Kubernetes manifest using MTA
@@ -8,13 +8,13 @@ type Application struct {
 	// Env captures the `env` field values in the CF application manifest.
 	Env map[string]string `yaml:"env,omitempty"`
 	// Routes represent the routes that are made available by the application.
-	Route RouteSpec `yaml:"route,inline,omitempty"`
+	Routes RouteSpec `yaml:"routes,inline,omitempty"`
 	// Services captures the `services` field values in the CF application manifest.
-	Services Services `yaml:"service,omitempty"`
+	Services Services `yaml:"services,omitempty"`
 	// Processes captures the `processes` field values in the CF application manifest.
-	Processes Processes `yaml:"process,omitempty"`
+	Processes Processes `yaml:"processes,omitempty"`
 	// Sidecars captures the `sidecars` field values in the CF application manifest.
-	Sidecars Sidecars `yaml:"sidecar,omitempty"`
+	Sidecars Sidecars `yaml:"sidecars,omitempty"`
 	// Stack represents the `stack` field in the application manifest.
 	// The value is captured for information purposes because it has no relevance
 	// in Kubernetes.
@@ -150,9 +150,12 @@ const (
 type Routes []Route
 
 type RouteSpec struct {
-	NoRoute     bool   `yaml:"noRoute,omitempty"`
-	RandomRoute bool   `yaml:"randomRoute,omitempty"`
-	Routes      Routes `yaml:"routes,omitempty"`
+	//NoRoute captures the field no-route in the CF Application manifest.
+	NoRoute bool `yaml:"noRoute,omitempty"`
+	//RandomRoute captures the field random-route in the CF Application manifest.
+	RandomRoute bool `yaml:"randomRoute,omitempty"`
+	//Routes captures the field routes in the CF Application manifest.
+	Routes Routes `yaml:"routes,omitempty"`
 }
 
 type Route struct {
@@ -160,19 +163,27 @@ type Route struct {
 	Route string `yaml:"route" validate:"required"`
 	// Protocol captures the protocol type: http, http2 or tcp. Note that the CF `protocol` field is only available
 	// for CF deployments that use HTTP/2 routing.
-	Protocol RouteProtocol `yaml:"protocol" validate:"required,oneof=http http2 tcp"`
+	Protocol RouteProtocol `yaml:"protocol,omitempty" validate:"required,oneof=http http2 tcp"`
 	// Options captures the options for the Route. Only load balancing is supported at the moment.
 	Options RouteOptions `yaml:"options,omitempty"`
 }
 
 type RouteOptions struct {
 	// LoadBalancing captures the settings for load balancing. Only `round-robin` or `least-connections` are supported
-	LoadBalancing string `yaml:"loadBalancing,omitempty" validate:"oneof=round-robin least-connections"`
+	LoadBalancing LoadBalancingType `yaml:"loadBalancing,omitempty" validate:"oneof=round-robin least-connections"`
 }
+
+type LoadBalancingType string
+
+const (
+	RoundRobinLoadBalancingType      LoadBalancingType = "round-robin"
+	LeastConnectionLoadBalancingType LoadBalancingType = "least-connection"
+)
+
 type RouteProtocol string
 
 const (
-	HTTPRouteProtocol  RouteProtocol = "http"
+	HTTPRouteProtocol  RouteProtocol = "http1"
 	HTTP2RouteProtocol RouteProtocol = "http2"
 	TCPRouteProtocol   RouteProtocol = "tcp"
 )

@@ -1,0 +1,37 @@
+version: "1"
+space: default
+applications:
+- name: foo
+  docker:
+    image: python:3
+  env:
+    CF_ROOT: /root
+    SERVER_PORT: "8080"
+  routes:
+  - route: foo.default.cluster.io/
+    protocol: http2
+  services:
+  - name: mysql
+    parameters:
+      DB_NAME: default
+  processes:
+  - type: web
+    command: /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server
+      $SERVER_PORT
+    health-check-type: http
+    health-check-http-endpoint: localhost:8080/
+    health-check-invocation-timeout: 30
+    log-rate-limit-per-second: 16K
+    memory: 128Mi
+    health-check-interval: 30
+    readiness-health-check-type: http
+    readiness-health-check-http-endpoint: localhost:8080/
+    readiness-health-invocation-timeout: 30
+    readiness-health-check-interval: 30
+    lifecycle: docker
+  stack: default
+  metadata:
+    labels:
+      foo: bar
+    annotations:
+      bar: foo

@@ -1,4 +1,4 @@
-{{- if .Values.route -}}
+{{- if (and (not .Values.noRoute) .Values.routes) -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

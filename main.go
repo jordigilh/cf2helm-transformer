@@ -6,66 +6,40 @@ import (
 	"os"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/konveyor/cf2helm-transformer/pkg/discover"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	a := Application{
-		Metadata: Metadata{
-			Name:        "foo",
-			Labels:      map[string]*string{"foo": ptrTo("bar")},
-			Annotations: map[string]*string{"bar": ptrTo("foo")},
-			Space:       "default",
-			Version:     "1",
-		},
-		Env: map[string]string{"CF_ROOT": "/root", "SERVER_PORT": "8080"},
-		Route: RouteSpec{
-			Routes: []Route{
-				{
-					Route:    "foo.default.cluster.io/",
-					Protocol: HTTP2RouteProtocol,
-				},
-			},
-		},
-		Services: Services{
-			ServiceSpec{
-				Name:       "mysql",
-				Parameters: map[string]interface{}{"DB_NAME": "default"},
-			},
-		},
-		Processes: Processes{
-			{Type: Web,
-				Command: "/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT",
-				Memory:  "128Mi",
-				ReadinessCheck: ProbeSpec{
-					Endpoint: "localhost:8080/",
-					Type:     HTTPProbeType,
-					Timeout:  30,
-					Interval: 30,
-				},
-				HealthCheck: ProbeSpec{
-					Endpoint: "localhost:8080/",
-					Type:     HTTPProbeType,
-					Timeout:  30,
-					Interval: 30,
-				},
-				Instances:    1,
-				LogRateLimit: "16K",
-				Lifecycle:    "docker",
-			},
-		},
-		Stack: "default",
-		Docker: Docker{
-			Image: "python:3",
-		},
-		Instances: 1,
-	}
-	err := validate.Struct(a)
+
+	m := generateCFManifest()
+	mb, err := yaml.Marshal(m)
 	if err != nil {
 		log.Fatal(err)
 	}
-	b, err := yaml.Marshal(a)
+	err = os.WriteFile("manifest.yaml", mb, os.ModeAppend)
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, err := os.ReadFile("manifest.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ma := discover.Manifest{Applications: []*discover.AppManifest{}}
+	err = yaml.Unmarshal(b, &ma)
+	if err != nil {
+		log.Fatal(err)
+	}
+	a, err := discover.Discover(*m.Applications[0], "1", "default")
+	if err != nil {
+		log.Fatal(err)
+	}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	err = validate.Struct(a)
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, err = yaml.Marshal(a)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,9 +47,54 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("%s\n", b)
-
 }
 
 func ptrTo[T comparable](s T) *T {
 	return &s
+}
+
+func generateCFManifest() *discover.Manifest {
+
+	app := discover.AppManifest{
+		Name: "foo",
+		Metadata: &discover.Metadata{
+			Labels:      map[string]*string{"foo": ptrTo("bar")},
+			Annotations: map[string]*string{"bar": ptrTo("foo")},
+		},
+		Env: map[string]string{"CF_ROOT": "/root", "SERVER_PORT": "8080"},
+		Routes: &discover.AppManifestRoutes{
+			{
+				Route:    "foo.default.cluster.io/",
+				Protocol: discover.HTTP2,
+			},
+		},
+		Services: &discover.AppManifestServices{
+			{
+				Name:       "mysql",
+				Parameters: map[string]interface{}{"DB_NAME": "default"},
+			},
+		},
+		Processes: &discover.AppManifestProcesses{
+			{
+				Type:                             discover.Web,
+				Command:                          "/usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT",
+				Memory:                           "128Mi",
+				HealthCheckType:                  discover.Http,
+				HealthCheckHTTPEndpoint:          "localhost:8080/",
+				HealthCheckInvocationTimeout:     30,
+				HealthCheckInterval:              30,
+				LogRateLimitPerSecond:            "16K",
+				Lifecycle:                        "docker",
+				ReadinessHealthCheckType:         discover.Http,
+				ReadinessHealthCheckHttpEndpoint: "localhost:8080/",
+				ReadinessHealthInvocationTimeout: 30,
+				ReadinessHealthCheckInterval:     30,
+			},
+		},
+		Docker: &discover.AppManifestDocker{
+			Image: "python:3",
+		},
+		Stack: "default",
+	}
+	return discover.NewManifest("default", &app)
 }

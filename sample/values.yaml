@@ -11,11 +11,11 @@ env:
 routes:
 - route: foo.default.cluster.io/
   protocol: http2
-service:
+services:
 - name: mysql
   parameters:
     DB_NAME: default
-process:
+processes:
 - type: web
   command: /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server
     $SERVER_PORT
@@ -34,7 +34,7 @@ process:
   logRateLimit: 16K
   lifecycle: docker
 stack: default
-timeout: 0
+timeout: 60
 docker:
   image: python:3
 instances: 1
