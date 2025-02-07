@@ -27,32 +27,40 @@ labels:
   foo: bar
 annotations:
   bar: foo
+version: "1"
 env:
   CF_ROOT: /root
   SERVER_PORT: "8080"
-route:
+routes:
 - route: foo.default.cluster.io/
   protocol: http2
-service:
+services:
 - name: mysql
   parameters:
     DB_NAME: default
-process:
+processes:
 - type: web
-  command:
-  - /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server $SERVER_PORT
+  command: /usr/bin/echo hello world>index.html; /usr/local/bin/python3 -m http.server
+    $SERVER_PORT
   memory: 128Mi
   healthCheck:
     endpoint: localhost:8080/
+    timeout: 30
+    interval: 30
     type: http
   readinessCheck:
     endpoint: localhost:8080/
+    timeout: 30
+    interval: 30
     type: http
+  instances: 1
+  logRateLimit: 16K
+  lifecycle: docker
 stack: default
+timeout: 60
 docker:
   image: python:3
 instances: 1
-
 ```
 
 # Rendering the Kubernetes templates
