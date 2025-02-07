@@ -3,7 +3,7 @@ package discover
 import (
 	"encoding/json"
 
-	"github.com/konveyor/cf2helm-transformer/pkg/models"
+	"github.com/gciavarrini/cf-application-discovery/pkg/models"
 )
 
 func Discover(cfApp AppManifest, version, space string) (models.Application, error) {

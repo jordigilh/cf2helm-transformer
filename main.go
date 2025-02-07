@@ -6,21 +6,17 @@ import (
 	"os"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/konveyor/cf2helm-transformer/pkg/discover"
+
+	"github.com/gciavarrini/cf-application-discovery/pkg/discover"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
 
-	m := generateCFManifest()
-	mb, err := yaml.Marshal(m)
-	if err != nil {
+	if err := generateCFManifest(); err != nil {
 		log.Fatal(err)
 	}
-	err = os.WriteFile("manifest.yaml", mb, os.ModeAppend)
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	b, err := os.ReadFile("manifest.yaml")
 	if err != nil {
 		log.Fatal(err)
@@ -30,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	a, err := discover.Discover(*m.Applications[0], "1", "default")
+	a, err := discover.Discover(*ma.Applications[0], "1", "default")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +49,7 @@ func ptrTo[T comparable](s T) *T {
 	return &s
 }
 
-func generateCFManifest() *discover.Manifest {
+func generateCFManifest() error {
 
 	app := discover.AppManifest{
 		Name: "foo",
@@ -96,5 +92,10 @@ func generateCFManifest() *discover.Manifest {
 		},
 		Stack: "default",
 	}
-	return discover.NewManifest("default", &app)
+	m := discover.NewManifest("default", &app)
+	mb, err := yaml.Marshal(m)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile("manifest.yaml", mb, os.ModeAppend)
 }

@@ -3,6 +3,7 @@ module github.com/konveyor/cf2helm-transformer
 go 1.23.3
 
 require (
+	github.com/gciavarrini/cf-application-discovery v0.0.0-20250207191723-bcad299ebaad
 	github.com/go-playground/validator/v10 v10.24.0
 	gopkg.in/yaml.v2 v2.4.0
 )
