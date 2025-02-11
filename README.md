@@ -1,7 +1,7 @@
 # cf2helm-transformer
 CF Application discovery to helm transformer
 
-This is a sample helm chart that uses the values.yaml generated from a CF Application discovery structure and renders 3 simple manifests:
+This is a sample helm chart that uses the values.yaml generated from the discovery process of a Cloud Foundry Application manifest that is used to render 3 simple manifests:
 * Deployment
 * Service
 * Ingress
